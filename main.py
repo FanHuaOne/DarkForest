@@ -1108,6 +1108,8 @@ class DarkForestGUI:
             message += "The Dark Magic Dragon awaits you..."
             self.show_message(message)
             self.root.after(3000, self.show_main_menu)
+            self.set_button(0, "等待跳转", tk.DISABLED)
+            self.set_button(1, "Waiting...", tk.DISABLED)
         
         elif choice == 1:  # 返回过去
             # 恢复原始状态
@@ -1126,7 +1128,30 @@ class DarkForestGUI:
                     self.player.tags.remove("时间旅行者 / Time Traveler")
                 if "冰晶守护者 / Crystal Guardian" in self.player.tags:
                     self.player.tags.remove("冰晶守护者 / Crystal Guardian")
-                
+                # 添加有趣的标签 - 根据玩家属性决定
+            if self.player.health < 50:
+                self.player.add_tag("胆小的时间旅行者 / Timid Time Traveler")
+            elif self.player.attack > 30:
+                self.player.add_tag("强大的时空漫游者 / Powerful Temporal Wanderer")
+            elif self.player.gold > 20:
+                self.player.add_tag("富有的时空商人 / Wealthy Time Merchant")
+            elif self.player.defense > 10:
+                self.player.add_tag("时空守护者 / Temporal Guardian")
+            else:
+                self.player.add_tag("时空漫游者 / Temporal Wanderer")
+            
+            # 随机添加一个有趣的标签
+            fun_tags = [
+                "见过未来的凡人 / Mortal Who Saw the Future",
+                "时间悖论幸存者 / Time Paradox Survivor", 
+                "冰晶记忆承载者 / Crystal Memory Bearer",
+                "时空裂缝探险家 / Temporal Rift Explorer",
+                "命运拒绝者 / Fate Rejector"
+            ]
+            
+            if random.random() < 0.5:  # 50%几率获得额外标签
+                extra_tag = random.choice(fun_tags)
+                self.player.add_tag(extra_tag)
                 # 添加新标签
                 self.player.add_tag("时空漫游者 / Temporal Wanderer")
             
@@ -1134,6 +1159,9 @@ class DarkForestGUI:
             message += "You use the remaining crystal energy to return to your original timeline...\n\n"
             message += "虽然失去了强大的力量，但这段经历让你更加明智。\n"
             message += "Though you lost the great power, this experience has made you wiser."
+            
+            self.set_button(0, "等待跳转", tk.DISABLED)
+            self.set_button(1, "Waiting...", tk.DISABLED)
             self.show_message(message)
             self.root.after(3000, self.show_main_menu)
             
@@ -1182,6 +1210,10 @@ class DarkForestGUI:
                 success, message = self.battle_system.attempt_escape(self.player)
                 self.show_message(message)
                 if success:
+                    # 禁用战斗和逃跑按钮（索引0和1）
+                    self.set_button(0, "1. 战斗\nFight", tk.DISABLED)
+                    self.set_button(1, "2. 逃跑\nFlee", tk.DISABLED)
+                    # 2秒后自动返回主菜单
                     self.root.after(2000, self.show_main_menu)
                 else:
                     # 逃跑失败，必须战斗
