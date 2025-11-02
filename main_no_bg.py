@@ -580,18 +580,7 @@ class DarkForestGUI:
         self.root = tk.Tk()
         self.root.title("黑暗森林 / Dark Forest")
         self.root.geometry("840x600")
-        self.root.minsize(600, 500)  # 设置最小窗口大小
-        
-        # 在加载背景图片之前添加
-        self.bg_alpha = 70  # 设置背景不透明度 (0-255, 0=完全透明, 255=完全不透明)
-        
-        # 加载原始背景图片
-        try:
-            self.original_bg_image = Image.open("bg.jpg")
-            self.bg_photo = None
-        except Exception as e:
-            print(f"无法加载背景图片: {e}")
-            self.original_bg_image = None
+        self.root.configure(bg='#ffffff')
         
         self.player = Player()
         self.battle_system = BattleSystem()
@@ -603,7 +592,7 @@ class DarkForestGUI:
         self.current_shop = None
         self.current_merchant = None
         
-        # 每日消息字典（保持不变）
+        # 每日消息字典
         self.daily_messages = {
             1: {
                 "chinese": "第一天：你踏入黑暗森林。空气中弥漫着诡异的气息，远处似乎有低沉的咆哮在回荡。",
@@ -647,9 +636,8 @@ class DarkForestGUI:
             }
         }
         
-        
         self.setup_gui()
-        self.show_intro()
+        self.show_intro()  # 显示介绍页面而不是直接开始游戏
         
     def show_intro(self):
         """显示游戏介绍页面"""
@@ -672,33 +660,20 @@ class DarkForestGUI:
             
     def setup_gui(self):
         """设置GUI界面"""
-        # 创建Canvas作为背景容器
-        self.canvas = tk.Canvas(self.root, width=840, height=600, bg="#ffffff")
-        self.canvas.pack(fill="both", expand=True)
-        
-        # 设置初始背景图片
-        self.resize_background()
-        
-        # 绑定窗口大小变化事件
-        self.root.bind('<Configure>', self.on_window_resize)
-        
-        # 存储所有可调整大小的组件ID
-        self.resizable_items = {}
-        
-        # 标题 - 放在Canvas上
+        # 标题
         title_label = tk.Label(
-            self.root,
+            self.root, 
             text="🌲 黑暗森林 / Dark Forest 🌲", 
             font=("Arial", 20, "bold"),
             fg="#0F5FA1",
-            bg='SystemButtonFace',
-            relief="solid",
-            bd=1
+            bg="#ffffff"
         )
-        self.resizable_items['title'] = self.canvas.create_window(0.5, 0.05, window=title_label, anchor="n")
+        title_label.pack(pady=10)
         
-        # 状态显示区域 - 放在Canvas上
-        self.stats_frame = tk.Frame(self.root, bg='#1e1e1e')
+        # 状态显示区域
+        self.stats_frame = tk.Frame(self.root, bg='#1e1e1e')  # 文本框背景保持黑色
+        self.stats_frame.pack(fill=tk.X, padx=20, pady=10)
+        
         self.stats_text = tk.Text(
             self.stats_frame, 
             height=6, 
@@ -710,10 +685,11 @@ class DarkForestGUI:
             state=tk.DISABLED
         )
         self.stats_text.pack(fill=tk.BOTH, expand=True)
-        self.resizable_items['stats'] = self.canvas.create_window(0.5, 0.15, window=self.stats_frame, anchor="n", width=0.9, height=0.2)
         
-        # 事件显示区域 - 放在Canvas上
-        self.event_frame = tk.Frame(self.root, bg='#1e1e1e')
+        # 事件显示区域
+        self.event_frame = tk.Frame(self.root, bg='#1e1e1e')  # 文本框背景保持黑色
+        self.event_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
         self.event_text = tk.Text(
             self.event_frame, 
             height=10, 
@@ -725,109 +701,61 @@ class DarkForestGUI:
             state=tk.DISABLED
         )
         self.event_text.pack(fill=tk.BOTH, expand=True)
-        self.resizable_items['event'] = self.canvas.create_window(0.5, 0.4, window=self.event_frame, anchor="n", width=0.9, height=0.4)
         
-        # 选项按钮区域 - 放在Canvas上
-        self.buttons_frame = tk.Frame(self.root, bg='#1e1e1e')
-        self.buttons_frame.pack_propagate(False)
+        # 选项按钮区域 - 增加按钮行的高度
+        self.buttons_frame = tk.Frame(self.root, bg='#1e1e1e', height=80)  # 增加按钮框架高度
+        self.buttons_frame.pack(fill=tk.X, side=tk.BOTTOM, padx=10, pady=10)
+        self.buttons_frame.pack_propagate(False)  # 防止框架被内容压缩
         
         self.buttons = []
-        for i in range(5):
+        for i in range(5):  # 5个按钮
             btn = tk.Button(
                 self.buttons_frame,
                 text="",
-                font=("Arial", 12),
+                font=("Arial", 12),  # 增加默认字体大小
                 bg="#0F6B4C",
                 fg='white',
+                height=3,  # 增加按钮高度
+                # 不设置固定宽度，使用expand和fill来动态调整
                 command=lambda i=i: self.on_button_click(i)
             )
             btn.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=2)
             self.buttons.append(btn)
+            
+        # 绑定窗口大小变化事件
+        self.root.bind('<Configure>', self.on_window_resize)
         
-        self.resizable_items['buttons'] = self.canvas.create_window(0.5, 0.85, window=self.buttons_frame, anchor="n", width=0.9, height=0.1)
-    
-    def resize_background(self):
-        """调整背景图片大小以适应窗口，并应用透明度"""
-        if not self.original_bg_image:
-            return
-        
-        # 获取当前窗口尺寸
-        width = self.root.winfo_width()
-        height = self.root.winfo_height()
-        
-        # 如果窗口还没有被渲染，使用默认尺寸
-        if width < 10 or height < 10:
-            width, height = 840, 600
-        
-        # 调整原始图片大小
-        resized_image = self.original_bg_image.resize((width, height), Image.Resampling.LANCZOS)
-        
-        # 创建一个纯色背景（黑色，可根据需要修改）
-        base = Image.new("RGB", (width, height), (30, 30, 30))
-        
-        # 将原图转为RGBA，并设置透明度
-        overlay = resized_image.convert("RGBA")
-        alpha = max(0, min(255, self.bg_alpha))  # 限制在0~255
-        overlay.putalpha(alpha)
-        
-        # 将overlay贴到base上
-        base.paste(overlay, (0, 0), overlay)
-        
-        # 转成Tkinter可用的图片
-        self.bg_photo = ImageTk.PhotoImage(base)
-        
-        # 清除旧背景
-        if hasattr(self, 'bg_image_id'):
-            self.canvas.delete(self.bg_image_id)
-        
-        # 添加新的背景图片
-        self.bg_image_id = self.canvas.create_image(0, 0, image=self.bg_photo, anchor="nw")
-        
-        # 保证背景在最底层
-        self.canvas.lower(self.bg_image_id)
-
-    
     def on_window_resize(self, event):
         """窗口大小变化时的回调函数"""
-        # 只有当事件是主窗口时处理（避免处理子组件的事件）
-        if event.widget == self.root:
-            self.resize_background()
+        # 动态调整按钮字体大小
+        window_width = self.root.winfo_width()
+        # 增加字体大小范围，确保按钮文本清晰可见
+        base_font_size = max(10, min(14, window_width // 60))
+        
+        for btn in self.buttons:
+            btn.configure(font=("Arial", base_font_size))
             
-            # 更新所有组件的位置和大小
-            self.update_component_sizes()
-            
-            # 动态调整按钮字体大小
-            window_width = self.root.winfo_width()
-            base_font_size = max(10, min(14, window_width // 60))
-            
-            for btn in self.buttons:
-                btn.configure(font=("Arial", base_font_size))
-    
-    def update_component_sizes(self):
-        """更新所有组件的位置和大小"""
-        # 获取当前窗口尺寸
-        width = self.root.winfo_width()
-        height = self.root.winfo_height()
-        
-        # 更新标题位置
-        self.canvas.coords(self.resizable_items['title'], width * 0.5, height * 0.05)
-        
-        # 更新状态框位置和大小
-        self.canvas.coords(self.resizable_items['stats'], width * 0.5, height * 0.15)
-        self.canvas.itemconfig(self.resizable_items['stats'], width=width * 0.9, height=height * 0.2)
-        
-        # 更新事件框位置和大小
-        self.canvas.coords(self.resizable_items['event'], width * 0.5, height * 0.4)
-        self.canvas.itemconfig(self.resizable_items['event'], width=width * 0.9, height=height * 0.4)
-        
-        # 更新按钮框位置和大小
-        self.canvas.coords(self.resizable_items['buttons'], width * 0.5, height * 0.85)
-        self.canvas.itemconfig(self.resizable_items['buttons'], width=width * 0.9, height=height * 0.1)
-    
     def update_ui_color(self):
-        """移除原来的颜色更新逻辑，因为现在使用固定背景图片"""
-        # 这个方法现在不需要做任何事情，背景是固定的图片
-        pass
+        """根据耐力值更新UI背景颜色"""
+        stamina = self.player.stamina
+        
+        if stamina >= 60:
+            # 白天 - 白色背景
+            bg_color = '#ffffff'
+        elif stamina >= 20:
+            # 黄昏 - 橙黄色背景
+            bg_color = '#FFA500'
+        else:
+            # 夜晚 - 藏青色背景
+            bg_color = '#191970'
+        
+        # 更新主窗口背景色
+        self.root.configure(bg=bg_color)
+        
+        # 更新标题背景色
+        for widget in self.root.winfo_children():
+            if isinstance(widget, tk.Label) and "黑暗森林" in widget.cget("text"):
+                widget.configure(bg=bg_color)
     
     def update_stats(self):
         """更新状态显示"""
@@ -836,18 +764,19 @@ class DarkForestGUI:
         self.stats_text.insert(1.0, self.player.get_stats_text())
         self.stats_text.config(state=tk.DISABLED)
         
-        # 仍然调用update_ui_color来更新标题颜色
+        # 更新UI颜色
         self.update_ui_color()
     
     def show_message(self, message):
-        """显示消息"""
+        """显示消息，替换中部文本框内容"""
         self.event_text.config(state=tk.NORMAL)
         self.event_text.delete(1.0, tk.END)
         self.event_text.insert(1.0, message)
         self.event_text.config(state=tk.DISABLED)
+        # 强制更新GUI
         self.root.update()
         
-        # 仍然调用update_ui_color来更新标题颜色
+        # 更新UI颜色
         self.update_ui_color()
     
     def clear_buttons(self):
